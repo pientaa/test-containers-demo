@@ -1,6 +1,7 @@
 package com.pientaa.demo
 
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -10,9 +11,14 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @ActiveProfiles("test")
 @ContextConfiguration(initializers = [TestContainersProjectConfig.DockerPostgreDataSourceInitializer::class])
 @Testcontainers
-class DemoApplicationTests {
+class Foo2Test(private val personRepository: PersonRepository) : FunSpec() {
+    init {
 
-    @Test
-    fun contextLoads() {
+        test("foo") {
+            personRepository.findByEmail("pientaa@pientaa.pl") shouldBe null
+        }
+        test("add person") {
+            personRepository.save(Person("pientaa@pientaa.pl", "pienta"))
+        }
     }
 }
