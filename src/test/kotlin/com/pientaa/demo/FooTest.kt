@@ -1,18 +1,20 @@
 package com.pientaa.demo
 
-import io.kotest.core.spec.style.FunSpec
+import com.pientaa.demo.Util.attachBasicPostgresContainer
+import io.kotest.core.extensions.install
+import io.kotest.extensions.testcontainers.JdbcTestContainerExtension
+import io.kotest.extensions.testcontainers.LifecycleMode
 import io.kotest.matchers.shouldBe
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import org.testcontainers.junit.jupiter.Testcontainers
 
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(initializers = [TestContainersProjectConfig.DockerPostgreDataSourceInitializer::class])
-@Testcontainers
-class FooTest(private val personRepository: PersonRepository) : FunSpec() {
+class FooTest(private val personRepository: PersonRepository) : MigrationSpec() {
+    val postgresContainer = attachBasicPostgresContainer()
+
     init {
+        install(JdbcTestContainerExtension(postgresContainer, LifecycleMode.Leaf))
 
         test("foo") {
             personRepository.findByEmail("pientaa@pientaa.pl") shouldBe null
