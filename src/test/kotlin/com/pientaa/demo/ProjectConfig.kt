@@ -30,6 +30,11 @@ object TestContainerListener : TestListener {
 
 object DatabaseCleanUpListener : TestListener {
     override suspend fun afterTest(testCase: TestCase, result: TestResult) {
+//      Huge disadvantage: when there is already plenty of data and plenty of flyways already applied
+//      to the production server. It makes no sense to snapshot schema then, because flyways will be run despite that.
+//      So I propose to clear database not using flyway, but using some other tool instead.
+//      It can be e.g simple truncate.
+
         Util.testFlyway.clean()
         Util.testFlyway.migrate()
 

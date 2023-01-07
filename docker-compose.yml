@@ -3,7 +3,11 @@ version: "3.8"
 services:
   demo-db:
     container_name: demo-db
-    image: postgres:12
+    image: migrated-postgres:1.0
+    build: ./db
+#    volumes:
+#      - ./database-init:/docker-entrypoint-initdb.d
+#  docker exec -t demo-db pg_dump -s --if-exists --exclude-table=flyway_schema_history demo -c -U postgres > schema_snapshot.sql
     ports:
       - "5432:5432"
     environment:

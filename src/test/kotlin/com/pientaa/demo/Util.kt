@@ -1,14 +1,15 @@
 package com.pientaa.demo
 
 import io.kotest.core.spec.Spec
-import io.kotest.extensions.testcontainers.perProject
 import io.kotest.extensions.testcontainers.perSpec
 import org.flywaydb.core.Flyway
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 object Util {
-    private val POSTGRES_IMAGE: DockerImageName = DockerImageName.parse("postgres:12")
+    private val POSTGRES_IMAGE: DockerImageName = DockerImageName.parse("migrated-postgres:1.0")
+        .asCompatibleSubstituteFor("postgres")
+//    Also above could be simple postgres and just setting `withFileSystemBind()` in `attachBasicPostgresContainer()`
 
     val testFlyway: Flyway
         get() = Flyway.configure()
