@@ -4,8 +4,3 @@ spring:
     url: jdbc:tc:postgresql:12:///test_db
     username: test_user
     password: test_password
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-  flyway:
-    enabled: false

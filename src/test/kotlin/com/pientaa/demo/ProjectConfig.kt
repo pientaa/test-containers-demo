@@ -9,6 +9,7 @@ import io.kotest.core.test.TestResult
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.extensions.spring.SpringTestExtension
 import io.kotest.extensions.spring.SpringTestLifecycleMode
+import java.io.File
 
 internal object TestContainersProjectConfig : AbstractProjectConfig() {
     override fun extensions() =
@@ -31,6 +32,11 @@ object DatabaseCleanUpListener : TestListener {
     override suspend fun afterTest(testCase: TestCase, result: TestResult) {
         Util.testFlyway.clean()
         Util.testFlyway.migrate()
+
+        Util.testFlyway.configuration.dataSource.connection.createStatement()
+            .execute(
+                File("src/main/resources/import.sql").readText()
+            )
         super.afterTest(testCase, result)
     }
 }

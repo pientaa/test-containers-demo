@@ -1,6 +1,7 @@
 package com.pientaa.demo
 
 import io.kotest.core.spec.Spec
+import io.kotest.extensions.testcontainers.perProject
 import io.kotest.extensions.testcontainers.perSpec
 import org.flywaydb.core.Flyway
 import org.testcontainers.containers.PostgreSQLContainer
