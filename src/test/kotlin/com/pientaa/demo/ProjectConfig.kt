@@ -4,11 +4,12 @@ import com.pientaa.demo.Util.attachBasicPostgresContainer
 import io.kotest.core.config.AbstractProjectConfig
 import io.kotest.core.listeners.TestListener
 import io.kotest.core.spec.Spec
-import io.kotest.core.test.TestCase
-import io.kotest.core.test.TestResult
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.extensions.spring.SpringTestExtension
 import io.kotest.extensions.spring.SpringTestLifecycleMode
+import io.kotest.extensions.testcontainers.TestContainerExtension
+import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.utility.DockerImageName
 import java.io.File
 
 internal object TestContainersProjectConfig : AbstractProjectConfig() {
@@ -23,25 +24,33 @@ internal object TestContainersProjectConfig : AbstractProjectConfig() {
 
 object TestContainerListener : TestListener {
     override suspend fun beforeSpec(spec: Spec) {
-        super.beforeSpec(spec)
         spec.attachBasicPostgresContainer()
+        super.beforeSpec(spec)
     }
 }
 
 object DatabaseCleanUpListener : TestListener {
-    override suspend fun afterTest(testCase: TestCase, result: TestResult) {
-//      Huge disadvantage: when there is already plenty of data and plenty of flyways already applied
-//      to the production server. It makes no sense to snapshot schema then, because flyways will be run despite that.
-//      So I propose to clear database not using flyway, but using some other tool instead.
-//      It can be e.g simple truncate.
 
-        Util.testFlyway.clean()
-        Util.testFlyway.migrate()
+    override suspend fun beforeSpec(spec: Spec) {
+        super.beforeSpec(spec)
+        val connection = Util.testFlyway.configuration.dataSource.connection
+        connection.createStatement()
+            .execute(File("src/main/resources/import.sql").readText())
+    }
 
-        Util.testFlyway.configuration.dataSource.connection.createStatement()
-            .execute(
-                File("src/main/resources/import.sql").readText()
-            )
-        super.afterTest(testCase, result)
+    override suspend fun afterSpec(spec: Spec) {
+        val connection = Util.testFlyway.configuration.dataSource.connection
+        connection.createStatement().execute(
+            """
+                DO LANGUAGE plpgsql ${'$'}${'$'}
+                    DECLARE statements CURSOR FOR SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+                    BEGIN
+                        FOR s IN statements LOOP
+                                EXECUTE 'TRUNCATE TABLE ' || s.table_name || ' CASCADE;';
+                            END LOOP;
+                    END ${'$'}${'$'};
+            """.trimIndent()
+        )
+        super.afterSpec(spec)
     }
 }
